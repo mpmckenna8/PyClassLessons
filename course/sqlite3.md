@@ -140,16 +140,17 @@ Use SQLite to store information inside your application. It was originally devel
     connection.close()                 
     ```
 
-    3. Make classes for both a polygon and database with some methods we can reuse so we don't need to type all this connection shim sham out each query.
+    3. ##### Challenge:
+      Make classes for both a polygon and database with some methods we can reuse so we can interact with our database through some simple methods.
       - Create a polygon class with each of our attributes
       - hints:
         - Use an @classmethod in your polygon object to make a given row returned from a query into a polygon object.
         - Following the patterns from the Pycon 2016 talk the modules imported were:
-        ```python
-        from contextlib import closing, contextmanager
-        import sqlite3
-        from threading import Lock
-        ```
+          ```python
+          from contextlib import closing, contextmanager
+          import sqlite3
+          from threading import Lock
+          ```
         - Watch the [pycon talk on sqlite3](https://www.youtube.com/watch?v=D7wSMnapDp4&index=25&list=WL) where he goes over making the classes towards the end of the video with an example that doesn't use a unique index as one of the fields in the table.
         - Check out the [code for the stocks example](https://github.com/kingsawyer/python_sqlite_talk/blob/master/stock_db.py) and make our polygons classes do the same thing.
         - Check out [an example answer to this challenge](https://github.com/mpmckenna8/pyclasssqlite3ex) if you get really stuck and then make that one better.
