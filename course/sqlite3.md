@@ -22,17 +22,18 @@ Use SQLite to store information inside your application. It was originally devel
         ```
         -- Run this file with the .read command.
         -- Older sqlite3 (osx packages a really old version) apparently don't have this.
-        -- If this happens, you can run sqlite3 at the command prompt and type the following in.
+        -- If this happens, you can run 'sqlite3 < myschema.schema' from the terminal and it should run whatever sql commands you have in myschema.schema.
+        -- Or you can run sqlite3 at the command prompt and type the following in.
 
 
         -- The .open command will open a database. If it doesn't
         -- exist, it will create it. (are there exceptions to this?)
-        .open "mypolygons.sqlite" 
+        .open "mypolygons.sqlite"
 
 
-        CREATE TABLE IF NOT EXISTS "Polygons" ( 
+        CREATE TABLE IF NOT EXISTS "Polygons" (
             "pKey" INTEGER PRIMARY KEY,
-            "Name" varchar(255) DEFAULT NULL, 
+            "Name" varchar(255) DEFAULT NULL,
             "Sides"  varchar(255) DEFAULT NULL,
             "SidesEnglish"   varchar(255) DEFAULT NULL
         );
@@ -41,7 +42,7 @@ Use SQLite to store information inside your application. It was originally devel
 2. ##### Interacting with our database in Python.
 
     In this section, we will use Python's [sqlite3 module](https://docs.python.org/2/library/sqlite3.html) to communicate with our database.
-    
+
     1. Goals: *read* from the database, *write* to the database, *see* our work in the sqlite3 CLI.
 
         1. Write Data:
@@ -85,7 +86,7 @@ Use SQLite to store information inside your application. It was originally devel
 
         2. Read Data: add this after the cursor is established. Comment out the lines similar to `c.execute(MY_INSERT_STATEMENT, SAMPLE_DATA)` for now.
             ```python
-                
+
                 SELECT_STATEMENT = "SELECT * FROM {table}"
                 MY_SELECT_STATEMENT = SELECT_STATEMENT.format(table=TABLE_NAME)
                 c.execute(MY_SELECT_STATEMENT)
@@ -113,7 +114,49 @@ Use SQLite to store information inside your application. It was originally devel
             sqlite> ^D
             ```
 
-3. #### Extended Resources - An overview of SQL
+3. ##### Use context managers .
+
+    This section will generally apply concepts from a [pycon talk](https://www.youtube.com/watch?v=D7wSMnapDp4&index=25&list=WL) on sqlite3.
+
+    1. [Use context managers](https://docs.python.org/2/library/sqlite3.html#using-the-connection-as-a-context-manager) so you don't have to deal with cursors for every interaction with the database. With context managers we don't have to worry about remembering to commit writes or close our cursor. We should just tell the connection to the database close at the end of the script.
+    2. To simplify things a bit we can just use a with connection: thing and do a connection.close() after we've called our connections.
+    ```python
+
+    connection = sqlite3.connect(FILENAME)
+
+    # make our table
+    # We're going to use some context managers to manage the connections
+    with connection:
+        connection.execute("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ( pkey " +
+        "INTEGER PRIMARY KEY, name TEXT, sides INTEGER, sides_english TEXT)")
+
+
+    with connection:
+        insertStatement = "INSERT INTO {table} VALUES (?,?,?,?)".format(table=TABLE_NAME)
+        connection.execute(insertStatement, SAMPLE_DATA_1)
+
+
+
+    connection.close()                 
+    ```
+
+    3. Make classes for both a polygon and database with some methods we can reuse so we don't need to type all this connection shim sham out each query.
+      - Create a polygon class with each of our attributes
+      - hints:
+        - Use an @classmethod in your polygon object to make a given row returned from a query into a polygon object.
+        - Following the patterns from the Pycon 2016 talk the modules imported were:
+        ```python
+        from contextlib import closing, contextmanager
+        import sqlite3
+        from threading import Lock
+        ```
+        - Watch the [pycon talk on sqlite3](https://www.youtube.com/watch?v=D7wSMnapDp4&index=25&list=WL) where he goes over making the classes towards the end of the video with an example that doesn't use a unique index as one of the fields in the table.
+        - Check out the [code for the stocks example](https://github.com/kingsawyer/python_sqlite_talk/blob/master/stock_db.py) and make our polygons classes do the same thing.
+        - Check out [an example answer to this challenge](https://github.com/mpmckenna8/pyclasssqlite3ex) if you get really stuck and then make that one better.
+
+
+
+4. #### Extended Resources - An overview of SQL
     1. [What's SQL?](http://en.wikipedia.org/wiki/SQL) - "SQL (Structured Query Language) is a special-purpose programming language designed for managing data held in a relational database management system (RDBMS), or for stream processing in a relational data stream management system (RDSMS).
     2. [RDBMS](http://en.wikipedia.org/wiki/Relational_database_management_system) - "A relational database management system (RDBMS) is a database management system (DBMS) that is based on the relational model."
 
